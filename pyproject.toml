@@ -1,0 +1,17 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "link-sense"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "typer[all]>=0.12",
+]
+
+[project.scripts]
+link-sense = "link_sense.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["link_sense"]
