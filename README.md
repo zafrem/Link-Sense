@@ -1,8 +1,27 @@
 # Link Sense
 
-Analyzes your browser history, scores URLs by recency and visit frequency, and lets you curate bookmarks through an interactive HTML report.
+Analyzes your browser history, scores URLs by recency and visit frequency, and helps you turn the pages you really use into organized bookmarks.
 
-## How it works
+**Website and live demo:** https://link-sense.codeforlife.dev
+
+## Two ways to use it
+
+### Chrome extension (recommended)
+
+Review and apply bookmarks without leaving the browser. Supported on Linux with Chrome or Chromium.
+
+Only Chrome and Chromium installed natively (config under `~/.config`) are supported. Snap and Flatpak builds of Chromium are not supported: their confinement blocks native-messaging hosts and they use different directories.
+
+1. Run `pip install -e .` from the repository root (installs `link-sense` and `link-sense-host`)
+2. `link-sense install-host` registers the native-messaging host for Chrome and Chromium
+3. In Chrome, open `chrome://extensions`, enable **Developer mode**, choose **Load unpacked**, and select the `extension/` folder
+4. Click the Link Sense toolbar icon, pick pages to add (with folders) or bookmarks to remove, and click **Apply**
+
+Apply updates `~/.local/share/link-sense/bookmarks.json` and creates the bookmarks in Chrome under **Other bookmarks → Link Sense**. If Chrome and the store ever disagree, **Retry sync** re-creates missing Chrome bookmarks from the store.
+
+Run the tests with `pytest` and `cd extension && npm test`.
+
+### CLI report
 
 1. **Analyze** — reads Chrome/Firefox history, scores each URL, and generates `report.html`
 2. **Review** — open the report in any browser, browse the ranked list, assign folders, mark items to add or remove
@@ -51,20 +70,25 @@ link-sense list --sort folder
 
 State (folder assignments, pending actions) is saved to `localStorage` so your work persists across page refreshes.
 
-## Chrome extension (Linux, Chrome/Chromium)
+## Website
 
-Review and apply bookmarks without leaving the browser.
+The showcase site lives in `site/` (plain HTML, CSS and one JavaScript file; no build step) and is published at https://link-sense.codeforlife.dev.
 
-Only Chrome and Chromium installed natively (config under `~/.config`) are supported. Snap and Flatpak builds of Chromium are not supported: their confinement blocks native-messaging hosts and they use different directories.
+```bash
+# Preview locally
+python -m http.server -d site 8000     # then open http://localhost:8000
 
-1. Run `pip install -e .` from the repository root (installs `link-sense` and `link-sense-host`)
-2. `link-sense install-host` registers the native-messaging host for Chrome and Chromium
-3. In Chrome, open `chrome://extensions`, enable **Developer mode**, choose **Load unpacked**, and select the `extension/` folder
-4. Click the Link Sense toolbar icon, pick pages to add (with folders) or bookmarks to remove, and click **Apply**
+# Run the site's tests
+cd site && npm test
+```
 
-Apply updates `~/.local/share/link-sense/bookmarks.json` and creates the bookmarks in Chrome under **Other bookmarks → Link Sense**. If Chrome and the store ever disagree, **Retry sync** re-creates missing Chrome bookmarks from the store.
+A GitHub Actions workflow (`.github/workflows/pages.yml`) runs the tests and deploys the site to GitHub Pages whenever `site/**` changes on `main`. It can also be started by hand from the Actions tab.
 
-Run the tests with `pytest` and `cd extension && npm test`.
+One-time setup for a new repository:
+
+1. **Settings → Pages → Source:** choose **GitHub Actions**.
+2. At your DNS provider, add a `CNAME` record for `link-sense` on `codeforlife.dev` pointing to `zafrem.github.io`.
+3. After the first deploy, turn on **Enforce HTTPS** in **Settings → Pages** once the certificate is issued.
 
 ## Data storage
 
