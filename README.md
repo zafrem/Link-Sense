@@ -51,6 +51,19 @@ link-sense list --sort folder
 
 State (folder assignments, pending actions) is saved to `localStorage` so your work persists across page refreshes.
 
+## Chrome extension (Linux, Chrome/Chromium)
+
+Review and apply bookmarks without leaving the browser.
+
+1. `pip install -e .` (installs `link-sense` and `link-sense-host`)
+2. `link-sense install-host` registers the native-messaging host for Chrome and Chromium
+3. In Chrome, open `chrome://extensions`, enable **Developer mode**, choose **Load unpacked**, and select the `extension/` folder
+4. Click the Link Sense toolbar icon, pick pages to add (with folders) or bookmarks to remove, and click **Apply**
+
+Apply updates `~/.local/share/link-sense/bookmarks.json` and creates the bookmarks in Chrome under **Other bookmarks → Link Sense**. If Chrome and the store ever disagree, **Retry sync** re-creates missing Chrome bookmarks from the store.
+
+Run the tests with `pytest` and `cd extension && npm test`.
+
 ## Data storage
 
 Bookmarks are stored in `~/.local/share/link-sense/bookmarks.json`.
