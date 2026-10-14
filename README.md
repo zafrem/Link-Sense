@@ -88,7 +88,8 @@ One-time setup for a new repository:
 
 1. **Settings → Pages → Source:** choose **GitHub Actions**.
 2. At your DNS provider, add a `CNAME` record for `link-sense` on `codeforlife.dev` pointing to `zafrem.github.io`.
-3. After the first deploy, turn on **Enforce HTTPS** in **Settings → Pages** once the certificate is issued.
+3. In **Settings → Pages → Custom domain**, enter `link-sense.codeforlife.dev` and save. With a GitHub Actions deployment the `CNAME` file in `site/` is not what sets the domain; this setting is. (Optionally verify `codeforlife.dev` under your account's **Settings → Pages** to prevent others from claiming it.)
+4. After the first deploy, turn on **Enforce HTTPS** in **Settings → Pages** once the certificate is issued.
 
 ## Data storage
 

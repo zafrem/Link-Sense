@@ -70,3 +70,20 @@ test("every copy button targets an existing element", () => {
 test("the demo has a noscript notice", () => {
   assert.match(html, /<noscript>[\s\S]*JavaScript[\s\S]*<\/noscript>/);
 });
+
+test("content sections keep their vertical padding and anchors clear the sticky header", () => {
+  const css = readFileSync(path.join(siteDir, "styles.css"), "utf8");
+  assert.match(css, /section\.wrap\s*\{[^}]*padding:\s*48px 16px/);
+  assert.match(css, /scroll-padding-top:\s*\d+px/);
+});
+
+test("the hero links to the GitHub repository", () => {
+  const hero = html.slice(html.indexOf('class="hero wrap"'), html.indexOf("</section>", html.indexOf('class="hero wrap"')));
+  assert.match(hero, /href="https:\/\/github\.com\/zafrem\/Link-Sense"/);
+});
+
+test("the README tells the owner to set the custom domain in Pages settings", () => {
+  const readme = readFileSync(path.join(siteDir, "..", "README.md"), "utf8");
+  assert.match(readme, /Custom domain/);
+  assert.match(readme, /link-sense\.codeforlife\.dev/);
+});

@@ -24,7 +24,7 @@
   }
 }
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; scroll-padding-top: 88px; }
 body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.6 var(--sans); }
 .wrap { max-width: 960px; margin: 0 auto; padding: 0 16px; }
 a { color: var(--accent); }
@@ -32,8 +32,9 @@ h1, h2, h3 { line-height: 1.2; margin: 0 0 .5em; }
 h1 { font: 700 clamp(2.2rem, 6vw, 3.8rem)/1.05 var(--serif); letter-spacing: -.02em; }
 h2 { font: 700 1.7rem/1.2 var(--serif); margin-top: 0; }
 h3 { font-size: 1.05rem; }
-section { padding: 48px 0; border-top: 1px solid var(--line); }
-.hero { padding: 72px 16px 56px; border-top: 0; }
+section { border-top: 1px solid var(--line); }
+section.wrap { padding: 48px 16px; }
+section.hero { padding: 72px 16px 56px; border-top: 0; }
 .eyebrow { text-transform: uppercase; letter-spacing: .12em; font-size: .78rem; color: var(--accent); font-weight: 700; margin: 0 0 12px; }
 .lead { font-size: 1.2rem; max-width: 40em; color: var(--muted); }
 .muted { color: var(--muted); }
@@ -95,7 +96,7 @@ nav a:hover { color: var(--accent); }
   .steps { grid-template-columns: 1fr; }
   .item { grid-template-columns: 1fr auto; }
   .item .folder-input { grid-column: 1 / -1; grid-row: 2; }
-  .hero { padding-top: 40px; }
+  section.hero { padding-top: 40px; }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }

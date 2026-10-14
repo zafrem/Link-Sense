@@ -148,6 +148,7 @@ function initDemo() {
         class: "button ghost toggle",
         type: "button",
         "aria-pressed": String(current.add),
+        "aria-label": `Add ${entry.title}`,
         text: current.add ? "Added" : "Add",
       });
       toggle.addEventListener("click", () => {
@@ -212,15 +213,17 @@ function initDecay() {
 
 function initCopy() {
   for (const button of document.querySelectorAll("[data-copy-target]")) {
+    const label = button.textContent;
+    let timer;
     button.addEventListener("click", async () => {
       const target = document.getElementById(button.dataset.copyTarget);
       if (!target) return;
-      const original = button.textContent;
       const ok = await copyText(target.textContent, navigator.clipboard);
       if (!ok) window.getSelection()?.selectAllChildren(target);
       button.textContent = ok ? "Copied" : "Press Ctrl+C";
-      setTimeout(() => {
-        button.textContent = original;
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        button.textContent = label;
       }, 1500);
     });
   }

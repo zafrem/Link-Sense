@@ -84,7 +84,8 @@ The DOM wiring in the same file builds all elements with `createElement` and `te
 
 1. Repository **Settings → Pages → Source: GitHub Actions**.
 2. DNS: a `CNAME` record for `link-sense` on `codeforlife.dev` pointing to `zafrem.github.io`.
-3. After the first successful deploy, **Settings → Pages → Enforce HTTPS** once the certificate is issued.
+3. **Settings → Pages → Custom domain:** enter `link-sense.codeforlife.dev` and save (an Actions deployment ignores the `CNAME` file; this setting is what applies the domain).
+4. After the first successful deploy, **Settings → Pages → Enforce HTTPS** once the certificate is issued.
 
 ## README changes
 
