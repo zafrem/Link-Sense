@@ -103,6 +103,10 @@ def test_apply_adds_and_removes(temp_store):
         {"adds": "not a list", "removes": []},
         {"adds": [], "removes": "not a list"},
         {"adds": [], "removes": [123]},
+        {"adds": [{"url": "https://a.example/"}, {"url": "https://b.example/", "score": "abc"}], "removes": []},
+        {"adds": [{"url": "https://a.example/"}, {"url": "https://b.example/", "score": None}], "removes": []},
+        {"adds": [{"url": "https://a.example/"}, {"url": "https://b.example/", "title": ["x"]}], "removes": []},
+        {"adds": [{"url": "https://a.example/"}, {"url": "https://b.example/", "folder": None}], "removes": []},
     ],
 )
 def test_apply_rejects_bad_payload_without_partial_writes(temp_store, payload):

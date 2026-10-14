@@ -1,4 +1,5 @@
 import json
+import math
 import sys
 from dataclasses import asdict
 
@@ -49,24 +50,26 @@ def _validate_apply(req: dict) -> tuple[list[dict], list[str]]:
     adds, removes = req.get("adds", []), req.get("removes", [])
     if not isinstance(adds, list) or not isinstance(removes, list):
         raise ValueError("adds and removes must be lists")
+    normalized = []
     for item in adds:
         if not isinstance(item, dict) or not isinstance(item.get("url"), str) or not item["url"]:
             raise ValueError("every add needs a non-empty string url")
+        title, folder, score = item.get("title", ""), item.get("folder", ""), item.get("score", 0.0)
+        if not isinstance(title, str) or not isinstance(folder, str):
+            raise ValueError("title and folder must be strings")
+        if isinstance(score, bool) or not isinstance(score, (int, float)) or not math.isfinite(score):
+            raise ValueError("score must be a finite number")
+        normalized.append({"url": item["url"], "title": title, "score": float(score), "folder": folder})
     if not all(isinstance(u, str) and u for u in removes):
         raise ValueError("every remove must be a non-empty string url")
-    return adds, removes
+    return normalized, removes
 
 
 def handle_apply(req: dict) -> dict:
-    adds, removes = _validate_apply(req)  # validate everything before touching the store
+    adds, removes = _validate_apply(req)  # validate and normalize everything before touching the store
     added, removed, missing = [], [], []
     for item in adds:
-        store.add(
-            item["url"],
-            title=str(item.get("title", "")),
-            score=float(item.get("score", 0.0)),
-            folder=str(item.get("folder", "")),
-        )
+        store.add(item["url"], title=item["title"], score=item["score"], folder=item["folder"])
         added.append(item["url"])
     for url in removes:
         (removed if store.remove(url) else missing).append(url)
