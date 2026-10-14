@@ -43,7 +43,7 @@ Give the showcase site (`https://link-sense.codeforlife.dev`) a favicon, so brow
 - Canvas 64×64. Background: rounded square covering the full canvas with a corner radius of 14.
 - Ribbon: a bookmark shape centred horizontally, 24 wide and 36 tall, top edge at y=12, with a triangular notch at the bottom (the two bottom corners at y=48, the notch apex at y=40).
 - Light colours: background `#0f766e`, ribbon `#ffffff`. Dark colours (SVG only): background `#5fd0c4`, ribbon `#06201d`. These are the site's `--accent` / `--accent-fg` tokens in each theme.
-- The ICO and PNG use the light colours (they cannot switch themes).
+- The ICO and PNG use the light colours (they cannot switch themes). The PNG is an opaque full-bleed square with no rounded corners, because iOS applies its own rounding and paints transparent corners black; the ICO keeps the rounded corners with a transparent background.
 
 ## Head links
 

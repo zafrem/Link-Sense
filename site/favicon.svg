@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <style>
+    .bg { fill: #0f766e; }
+    .ribbon { fill: #ffffff; }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #5fd0c4; }
+      .ribbon { fill: #06201d; }
+    }
+  </style>
+  <rect class="bg" width="64" height="64" rx="14"/>
+  <path class="ribbon" d="M20 12H44V48L32 40L20 48Z"/>
+</svg>
