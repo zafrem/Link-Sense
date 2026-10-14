@@ -1,3 +1,4 @@
+import shutil
 import webbrowser
 from pathlib import Path
 from typing import Annotated
@@ -6,7 +7,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from link_sense import analysis, history, scorer, store
+from link_sense import analysis, history, installer, scorer, store
 from link_sense.readers import HistoryEntry
 from link_sense.reporter import generate
 
@@ -111,3 +112,18 @@ def list_bookmarks(
             str(meta.get("added_at", ""))[:19],
         )
     console.print(table)
+
+
+@app.command(name="install-host")
+def install_host():
+    """Register the native-messaging host so the Chrome extension can talk to Link Sense."""
+    host_path = shutil.which("link-sense-host")
+    if not host_path:
+        console.print(
+            "[red]link-sense-host not found on PATH.[/red] Run [bold]pip install -e .[/bold] "
+            "and make sure your Python scripts directory is on PATH."
+        )
+        raise typer.Exit(1)
+    for path in installer.install(Path.home(), host_path):
+        console.print(f"[green]Wrote[/green] {path}")
+    console.print("Reload the Link Sense extension page in Chrome.")
