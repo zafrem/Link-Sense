@@ -6,7 +6,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from link_sense import scorer, store
+from link_sense import analysis, history, scorer, store
 from link_sense.readers import HistoryEntry
 from link_sense.reporter import generate
 
@@ -15,25 +15,13 @@ console = Console()
 
 
 def _read_history(browser: str, limit: int) -> list[HistoryEntry]:
-    from link_sense.readers import chrome, firefox
-
     entries: list[HistoryEntry] = []
-    if browser in ("chrome", "auto"):
-        found = chrome.read(limit)
+    for name, found in history.read_by_browser(browser, limit).items():
         if found:
-            console.print(f"[green]Chrome:[/green] {len(found)} entries")
+            console.print(f"[green]{name.capitalize()}:[/green] {len(found)} entries")
             entries.extend(found)
-        elif browser == "chrome":
-            console.print("[yellow]Chrome history not found.[/yellow]")
-
-    if browser in ("firefox", "auto"):
-        found = firefox.read(limit)
-        if found:
-            console.print(f"[green]Firefox:[/green] {len(found)} entries")
-            entries.extend(found)
-        elif browser == "firefox":
-            console.print("[yellow]Firefox history not found.[/yellow]")
-
+        elif browser == name:
+            console.print(f"[yellow]{name.capitalize()} history not found.[/yellow]")
     return entries
 
 
@@ -56,25 +44,7 @@ def analyze(
     console.print(f"[green]{len(scored)} URLs after deduplication and filtering.[/green]")
 
     saved = store.all_bookmarks()
-    saved_urls = set(saved.keys())
-
-    candidates = [e for e in scored if e.url not in saved_urls]
-    bookmarks_scored = [e for e in scored if e.url in saved_urls]
-    # Include saved bookmarks that have no recent history with a zero score
-    for url, meta in saved.items():
-        if url not in {e.url for e in bookmarks_scored}:
-            from datetime import datetime, timezone
-            from link_sense.scorer import ScoredEntry
-            bookmarks_scored.append(
-                ScoredEntry(
-                    url=url,
-                    title=meta.get("title", url),
-                    visit_count=0,
-                    last_visit_time=datetime.now(timezone.utc),
-                    days_since_visit=0,
-                    score=0.0,
-                )
-            )
+    candidates, bookmarks_scored = analysis.split(scored, saved)
 
     console.print(f"Candidates to add: [cyan]{len(candidates)}[/cyan]  |  Saved bookmarks: [cyan]{len(bookmarks_scored)}[/cyan]")
     console.print(f"[bold]Writing report → [cyan]{output}[/cyan][/bold]")
