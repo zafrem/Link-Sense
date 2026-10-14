@@ -15,6 +15,7 @@ dev = ["pytest>=8"]
 
 [project.scripts]
 link-sense = "link_sense.cli:app"
+link-sense-host = "link_sense.host:run"
 
 [tool.hatch.build.targets.wheel]
 packages = ["link_sense"]

@@ -76,7 +76,7 @@ All messages are JSON objects with a `type` and an optional `id` echoed in the r
 | `{type:"apply", adds:[{url,title,score,folder}], removes:[url]}` | `{type:"apply", added:[url], removed:[url], missing:[url]}` |
 | any | `{type:"error", message:string}` on failure |
 
-`ScoredEntry` mirrors the dataclass in `scorer.py` (`url`, `title`, `visit_count`, `last_visit_time` as ISO string, `days_since_visit`, `score`). `limit` is the per-browser history read limit (default 2000, as in the CLI). `missing` lists removals whose URL was not in the store.
+`ScoredEntry` mirrors the dataclass in `scorer.py` (`url`, `title`, `visit_count`, `last_visit_time` as ISO string, `days_since_visit`, `score`). Entries in `saved` carry one extra field, `folder` (from the store), which the UI shows and Retry sync uses. `limit` is the per-browser history read limit (default 2000, as in the CLI). `missing` lists removals whose URL was not in the store.
 
 ## Data flow
 
