@@ -69,3 +69,165 @@ export async function copyText(text, clipboard) {
     return false;
   }
 }
+
+// ---- DOM wiring (runs only in a browser; Node imports the helpers above) -------------------
+
+function el(tag, props = {}, ...children) {
+  const node = document.createElement(tag);
+  for (const [key, value] of Object.entries(props)) {
+    if (key === "text") node.textContent = value;
+    else if (key === "class") node.className = value;
+    else if (key.startsWith("on")) node.addEventListener(key.slice(2), value);
+    else node.setAttribute(key, value);
+  }
+  node.append(...children);
+  return node;
+}
+
+function renderTree(container, groups) {
+  container.replaceChildren();
+  if (groups.length === 0) return;
+  const rootList = el("ul", { class: "tree" });
+  const linkSense = el("li", {}, el("span", { class: "folder", text: "Other bookmarks › Link Sense" }));
+  const inner = el("ul");
+  for (const group of groups) {
+    const items = group.items.map((i) => el("li", { text: i.title }));
+    if (group.folder === "") {
+      inner.append(...items);
+    } else {
+      inner.append(el("li", {}, el("span", { class: "folder", text: group.folder }), el("ul", {}, ...items)));
+    }
+  }
+  linkSense.append(inner);
+  rootList.append(linkSense);
+  container.append(rootList);
+}
+
+function initDemo() {
+  const list = document.getElementById("demo-list");
+  if (!list) return;
+  const search = document.getElementById("demo-search");
+  const applyButton = document.getElementById("demo-apply");
+  const resetButton = document.getElementById("demo-reset");
+  const result = document.getElementById("demo-result");
+  const ranked = rank(SAMPLE);
+  const choices = new Map();
+
+  const choiceFor = (url) => choices.get(url) ?? { add: false, folder: "" };
+
+  function refresh() {
+    const n = countAdds(choices);
+    applyButton.disabled = n === 0;
+    applyButton.textContent = n > 0 ? `Apply (${n})` : "Apply";
+  }
+
+  function renderList() {
+    list.replaceChildren();
+    const shown = filterEntries(ranked, search.value);
+    if (shown.length === 0) {
+      list.append(el("li", { class: "empty", text: "No pages match" }));
+      return;
+    }
+    for (const entry of shown) {
+      const current = choiceFor(entry.url);
+      const row = el("li", { class: current.add ? "item marked" : "item" });
+      const folderInput = el("input", {
+        class: "folder-input",
+        type: "text",
+        list: "demo-folders",
+        placeholder: "Folder",
+        maxlength: String(MAX_FOLDER_LENGTH),
+        "aria-label": `Folder for ${entry.title}`,
+        value: current.folder,
+      });
+      folderInput.addEventListener("change", () => {
+        folderInput.value = normalizeFolder(folderInput.value);
+        choices.set(entry.url, { ...choiceFor(entry.url), folder: folderInput.value });
+      });
+      const toggle = el("button", {
+        class: "button ghost toggle",
+        type: "button",
+        "aria-pressed": String(current.add),
+        text: current.add ? "Added" : "Add",
+      });
+      toggle.addEventListener("click", () => {
+        const next = { ...choiceFor(entry.url), add: !choiceFor(entry.url).add };
+        choices.set(entry.url, next);
+        toggle.textContent = next.add ? "Added" : "Add";
+        toggle.setAttribute("aria-pressed", String(next.add));
+        row.className = next.add ? "item marked" : "item";
+        refresh();
+      });
+      row.append(
+        el(
+          "div",
+          { class: "info" },
+          el("span", { class: "title", text: entry.title }),
+          el("span", { class: "url", text: entry.url }),
+          el("span", { class: "meta", text: `Score ${entry.score} · ${entry.visits} visits · ${entry.days} days ago` }),
+        ),
+        folderInput,
+        toggle,
+      );
+      list.append(row);
+    }
+  }
+
+  search.addEventListener("input", renderList);
+  applyButton.addEventListener("click", () => {
+    const items = ranked
+      .filter((e) => choiceFor(e.url).add)
+      .map((e) => ({ title: e.title, url: e.url, folder: normalizeFolder(choiceFor(e.url).folder) }));
+    renderTree(result, buildFolderTree(items));
+  });
+  resetButton.addEventListener("click", () => {
+    choices.clear();
+    search.value = "";
+    result.replaceChildren();
+    renderList();
+    refresh();
+  });
+
+  renderList();
+  refresh();
+}
+
+function initDecay() {
+  const slider = document.getElementById("decay-days");
+  if (!slider) return;
+  const out = document.getElementById("decay-score");
+  const bar = document.getElementById("decay-bar");
+  const label = document.getElementById("decay-label");
+  const VISITS = 10;
+  const update = () => {
+    const days = Number(slider.value);
+    const s = score(VISITS, days);
+    out.textContent = s.toFixed(2);
+    bar.style.width = `${(s / VISITS) * 100}%`;
+    label.textContent = `${days} day${days === 1 ? "" : "s"} since last visit`;
+  };
+  slider.addEventListener("input", update);
+  update();
+}
+
+function initCopy() {
+  for (const button of document.querySelectorAll("[data-copy-target]")) {
+    button.addEventListener("click", async () => {
+      const target = document.getElementById(button.dataset.copyTarget);
+      if (!target) return;
+      const original = button.textContent;
+      const ok = await copyText(target.textContent, navigator.clipboard);
+      if (!ok) window.getSelection()?.selectAllChildren(target);
+      button.textContent = ok ? "Copied" : "Press Ctrl+C";
+      setTimeout(() => {
+        button.textContent = original;
+      }, 1500);
+    });
+  }
+}
+
+if (typeof document !== "undefined") {
+  initDemo();
+  initDecay();
+  initCopy();
+}
