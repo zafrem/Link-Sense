@@ -40,7 +40,7 @@ Markup, inside the header `<nav aria-label="Sections">`, after the GitHub link:
 
 ## Styling (`site/styles.css`)
 
-- `.coffee { display: inline-flex; align-items: center; }` and `.coffee img { display: block; height: 28px; width: auto; }` so the badge sits vertically centred with the text links and leaves no stray baseline gap.
+- `.coffee { display: inline-flex; align-items: center; }`, `.coffee img { display: block; height: 28px; width: auto; }`, and `align-items: center` added to the existing `nav` rule, so the badge sits vertically centred with the text links and leaves no stray baseline gap.
 - The header already wraps (`flex-wrap`), so on narrow screens the badge wraps with the other links; no new media query.
 - The badge keeps its own yellow colours in both light and dark themes; the dark theme needs no variant.
 

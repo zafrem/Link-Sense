@@ -39,11 +39,20 @@ test("every in-page anchor has a matching id", () => {
   }
 });
 
-test("external links go only to the project repository", () => {
+const BADGE_HREF = "https://buymeacoffee.com/zafrem";
+const BADGE_SRC =
+  "https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&amp;logo=buy-me-a-coffee&amp;logoColor=black";
+const BADGE_LINK =
+  `<a class="coffee" href="${BADGE_HREF}" rel="noopener"><img src="${BADGE_SRC}" alt="Buy Me A Coffee" height="28"></a>`;
+
+test("external links go only to the repository, the coffee link and the badge image", () => {
   const external = [...html.matchAll(/\b(?:href|src)="(https?:[^"]+)"/g)].map((m) => m[1]);
   for (const url of external) {
-    assert.ok(url.startsWith("https://github.com/zafrem/Link-Sense"), `unexpected external reference: ${url}`);
+    const allowed = url.startsWith("https://github.com/zafrem/Link-Sense") || url === BADGE_HREF || url === BADGE_SRC;
+    assert.ok(allowed, `unexpected external reference: ${url}`);
   }
+  assert.ok(external.includes(BADGE_HREF), "the coffee link must be present");
+  assert.ok(external.includes(BADGE_SRC), "the badge image must be present");
 });
 
 test("no third-party scripts, fonts or inline handlers", () => {
@@ -95,4 +104,27 @@ test("the head links the SVG icon, the ICO fallback and the touch icon, in that 
   const touch = head.indexOf('<link rel="apple-touch-icon" href="apple-touch-icon.png">');
   assert.ok(svg > -1 && ico > -1 && touch > -1, "all three icon links must be present");
   assert.ok(svg < ico && ico < touch, "SVG first so supporting browsers prefer it");
+});
+
+test("the header nav ends with the exact Buy Me A Coffee badge link", () => {
+  const start = html.indexOf('<nav aria-label="Sections">');
+  const nav = html.slice(start, html.indexOf("</nav>", start));
+  assert.ok(nav.includes(BADGE_LINK), "badge link markup must match exactly (URL, &amp; escaping, alt, height, rel)");
+  const anchors = nav.split("<a ").slice(1);
+  assert.ok(anchors.at(-1).startsWith('class="coffee"'), "the badge must be the last item in the nav");
+  assert.ok(anchors.length >= 2, "the other nav links must still be there");
+});
+
+test("the Privacy section discloses the one outside request", () => {
+  const start = html.indexOf('id="privacy"');
+  const section = html.slice(start, html.indexOf("</section>", start));
+  assert.match(section, /no analytics, cookies or third-party scripts/);
+  assert.match(section, /img\.shields\.io/);
+});
+
+test("the badge is styled to sit centred in the header without a baseline gap", () => {
+  const css = readFileSync(path.join(siteDir, "styles.css"), "utf8");
+  assert.match(css, /\.coffee\s*\{[^}]*display:\s*inline-flex[^}]*align-items:\s*center/);
+  assert.match(css, /\.coffee img\s*\{[^}]*display:\s*block[^}]*height:\s*28px/);
+  assert.match(css, /\nnav\s*\{[^}]*align-items:\s*center/);
 });
