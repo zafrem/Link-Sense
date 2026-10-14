@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - The badge link is exactly:
-  `<a class="coffee" href="https://buymeacoffee.com/zafrem" rel="noopener"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&amp;logo=buy-me-a-coffee&amp;logoColor=black" alt="Buy Me A Coffee" height="28"></a>`
+  `<a class="coffee" href="https://buymeacoffee.com/zafrem" rel="noopener"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&amp;logo=buy-me-a-coffee&amp;logoColor=black" alt="Buy Me A Coffee" width="162" height="28"></a>`
 - It is the last item inside `<nav aria-label="Sections">`, after the GitHub link.
 - The only external URLs allowed in `index.html` are: URLs starting with `https://github.com/zafrem/Link-Sense`, `https://buymeacoffee.com/zafrem`, and the badge image URL above. Nothing else.
 - No third-party scripts, fonts or inline handlers (existing test, unchanged).
@@ -57,7 +57,7 @@ const BADGE_HREF = "https://buymeacoffee.com/zafrem";
 const BADGE_SRC =
   "https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&amp;logo=buy-me-a-coffee&amp;logoColor=black";
 const BADGE_LINK =
-  `<a class="coffee" href="${BADGE_HREF}" rel="noopener"><img src="${BADGE_SRC}" alt="Buy Me A Coffee" height="28"></a>`;
+  `<a class="coffee" href="${BADGE_HREF}" rel="noopener"><img src="${BADGE_SRC}" alt="Buy Me A Coffee" width="162" height="28"></a>`;
 
 test("external links go only to the repository, the coffee link and the badge image", () => {
   const external = [...html.matchAll(/\b(?:href|src)="(https?:[^"]+)"/g)].map((m) => m[1]);
@@ -114,7 +114,7 @@ In `site/index.html`, directly after the line
 (the one inside `<nav aria-label="Sections">`, not the hero or footer links) insert:
 
 ```html
-        <a class="coffee" href="https://buymeacoffee.com/zafrem" rel="noopener"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&amp;logo=buy-me-a-coffee&amp;logoColor=black" alt="Buy Me A Coffee" height="28"></a>
+        <a class="coffee" href="https://buymeacoffee.com/zafrem" rel="noopener"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&amp;logo=buy-me-a-coffee&amp;logoColor=black" alt="Buy Me A Coffee" width="162" height="28"></a>
 ```
 
 - [ ] **Step 4: Reword the Privacy sentence**

@@ -43,7 +43,7 @@ const BADGE_HREF = "https://buymeacoffee.com/zafrem";
 const BADGE_SRC =
   "https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&amp;logo=buy-me-a-coffee&amp;logoColor=black";
 const BADGE_LINK =
-  `<a class="coffee" href="${BADGE_HREF}" rel="noopener"><img src="${BADGE_SRC}" alt="Buy Me A Coffee" height="28"></a>`;
+  `<a class="coffee" href="${BADGE_HREF}" rel="noopener"><img src="${BADGE_SRC}" alt="Buy Me A Coffee" width="162" height="28"></a>`;
 
 test("external links go only to the repository, the coffee link and the badge image", () => {
   const external = [...html.matchAll(/\b(?:href|src)="(https?:[^"]+)"/g)].map((m) => m[1]);
@@ -127,4 +127,11 @@ test("the badge is styled to sit centred in the header without a baseline gap", 
   assert.match(css, /\.coffee\s*\{[^}]*display:\s*inline-flex[^}]*align-items:\s*center/);
   assert.match(css, /\.coffee img\s*\{[^}]*display:\s*block[^}]*height:\s*28px/);
   assert.match(css, /\nnav\s*\{[^}]*align-items:\s*center/);
+});
+
+test("narrow screens raise the anchor clearance to cover the taller, wrapped header", () => {
+  const css = readFileSync(path.join(siteDir, "styles.css"), "utf8");
+  const match = css.match(/@media \(max-width:\s*700px\)\s*\{[^@]*?html\s*\{[^}]*scroll-padding-top:\s*(\d+)px/);
+  assert.ok(match, "a max-width: 700px rule must set scroll-padding-top");
+  assert.ok(Number(match[1]) >= 136, "phone header measured 126px; clearance must exceed it");
 });

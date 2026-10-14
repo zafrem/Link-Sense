@@ -95,6 +95,7 @@ nav a:hover { color: var(--accent); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 @media (max-width: 700px) {
+  html { scroll-padding-top: 136px; }
   .steps { grid-template-columns: 1fr; }
   .item { grid-template-columns: 1fr auto; }
   .item .folder-input { grid-column: 1 / -1; grid-row: 2; }

@@ -31,17 +31,17 @@ Add the owner's Buy Me A Coffee badge to the header bar of the showcase site (`h
 Markup, inside the header `<nav aria-label="Sections">`, after the GitHub link:
 
 ```html
-<a class="coffee" href="https://buymeacoffee.com/zafrem" rel="noopener"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&amp;logo=buy-me-a-coffee&amp;logoColor=black" alt="Buy Me A Coffee" height="28"></a>
+<a class="coffee" href="https://buymeacoffee.com/zafrem" rel="noopener"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&amp;logo=buy-me-a-coffee&amp;logoColor=black" alt="Buy Me A Coffee" width="162" height="28"></a>
 ```
 
 - The image URL is the owner's, with `&` written as `&amp;` in the HTML attribute.
-- `alt="Buy Me A Coffee"` and a fixed `height="28"` (the badge's native height) so the header does not jump while the image loads.
+- `alt="Buy Me A Coffee"` and a fixed `width="162"` and `height="28"` (the badge's native size, 161.75 by 28, rounded) so the header does not jump while the image loads. With a height alone the image is 0px wide until it arrives, and the nav re-wraps when it does.
 - The link opens in the same tab. It has `rel="noopener"` as a precaution.
 
 ## Styling (`site/styles.css`)
 
 - `.coffee { display: inline-flex; align-items: center; }`, `.coffee img { display: block; height: 28px; width: auto; }`, and `align-items: center` added to the existing `nav` rule, so the badge sits vertically centred with the text links and leaves no stray baseline gap.
-- The header already wraps (`flex-wrap`), so on narrow screens the badge wraps with the other links; no new media query.
+- The header already wraps (`flex-wrap`), so on narrow screens the badge wraps with the other links. The one media-query change is the anchor clearance below.
 - The badge keeps its own yellow colours in both light and dark themes; the dark theme needs no variant.
 
 ## Privacy wording
@@ -75,7 +75,7 @@ Work on a feature branch, run all three suites (`pytest`, `cd extension && npm t
 
 - If shields.io is unreachable or blocked, the browser shows the `alt` text "Buy Me A Coffee" inside the link, which still works.
 - Visitors using tracker blockers may not see the image; the link text from `alt` remains.
-- The badge adds roughly 28px of height to the header bar; the sticky header still clears anchor targets because the existing `scroll-padding-top: 88px` is larger than the header.
+- On narrow screens the badge adds a whole row to the wrapped header: measured in headless Chromium, the header is 126px tall at 300-520px (it was 82px at 390px and 430px before the badge) and 86px at 560-640px. The existing `scroll-padding-top: 88px` no longer clears it, so inside the existing `@media (max-width: 700px)` block `html` gets `scroll-padding-top: 136px`, a test pins that value above the measured 126px, and jumping to a section leaves its heading clear of the header.
 
 ## Open risks
 
