@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Link Sense",
+  "version": "0.1.0",
+  "description": "Review ranked browser history and bookmark the pages you actually use.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4byHQoc3g0qpJlTA2TRm4LPxC+76no6DcKxvlI+bXMnPfHx+aRrazE08NRar1TpsjLs8Oejw0iHamkVcOcw5Yx+vZdWYKDkNe9bMuQy+U7Yq/6v0UuF7H+orHM32VHL5HS6lhGJBCua5pD5/tsABV+1Axybo9PS0+TzWLYBJjeY0kLI+lLLQQTfLfRES1/PzShzn+1Ci+pZjbrFEt8BcBYorUFbw4qKmmrad13K3YnS5KFvLBJylNgK6snp4IS2OsTrbHlsSMf6SsHGeRj21PmNwQcj5mUvqH+fyOJuhMU9obrQqM1aotqpGjHyP2bzFZh97TuynqHORq1PtUY6sBwIDAQAB",
+  "permissions": [
+    "nativeMessaging",
+    "bookmarks",
+    "storage"
+  ],
+  "background": {
+    "service_worker": "service-worker.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Link Sense"
+  }
+}
