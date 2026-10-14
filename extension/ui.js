@@ -1,7 +1,7 @@
 import { buildApplyPayload, entryFolder, filterEntries, groupByFolder } from "./ui-model.js";
 
 const $ = (id) => document.getElementById(id);
-const state = { candidates: [], saved: [], choices: {}, selected: null, query: "", truncated: false, syncErrors: [] };
+const state = { candidates: [], saved: [], choices: {}, selected: null, query: "", truncated: false, syncErrors: [], applying: false };
 
 // ---- messaging -------------------------------------------------------------
 
@@ -176,7 +176,8 @@ function render() {
   renderList();
   renderDetail();
   const { adds, removes } = buildApplyPayload(state.candidates, state.saved, state.choices);
-  $("apply").disabled = adds.length + removes.length === 0;
+  $("apply").disabled = state.applying || adds.length + removes.length === 0;
+  $("reload").disabled = state.applying;
   $("apply").textContent = adds.length + removes.length ? `Apply (${adds.length + removes.length})` : "Apply";
 }
 
@@ -216,8 +217,12 @@ async function retrySync() {
 }
 
 async function apply() {
+  if (state.applying) return;
   const payload = buildApplyPayload(state.candidates, state.saved, state.choices);
+  state.applying = true;
   $("apply").disabled = true;
+  $("reload").disabled = true;
+  showBanner("Applying…");
   try {
     const resp = await send({ type: "apply", ...payload });
     for (const url of [...resp.added, ...resp.removed, ...resp.missing]) delete state.choices[url];
@@ -233,6 +238,9 @@ async function apply() {
     }
   } catch (err) {
     showBanner(describeError(err), true);
+    render();
+  } finally {
+    state.applying = false;
     render();
   }
 }

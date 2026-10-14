@@ -55,7 +55,9 @@ State (folder assignments, pending actions) is saved to `localStorage` so your w
 
 Review and apply bookmarks without leaving the browser.
 
-1. `pip install -e .` (installs `link-sense` and `link-sense-host`)
+Only Chrome and Chromium installed natively (config under `~/.config`) are supported. Snap and Flatpak builds of Chromium are not supported: their confinement blocks native-messaging hosts and they use different directories.
+
+1. Run `pip install -e .` from the repository root (installs `link-sense` and `link-sense-host`)
 2. `link-sense install-host` registers the native-messaging host for Chrome and Chromium
 3. In Chrome, open `chrome://extensions`, enable **Developer mode**, choose **Load unpacked**, and select the `extension/` folder
 4. Click the Link Sense toolbar icon, pick pages to add (with folders) or bookmarks to remove, and click **Apply**

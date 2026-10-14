@@ -91,9 +91,21 @@ async function runOps(parentId, root, ops) {
 }
 
 async function syncBookmarks(adds, removes) {
-  const parentId = await otherBookmarksId();
-  const root = await findRoot(parentId);
-  return runOps(parentId, root, planSync({ root, adds, removes }));
+  try {
+    const parentId = await otherBookmarksId();
+    const root = await findRoot(parentId);
+    return await runOps(parentId, root, planSync({ root, adds, removes }));
+  } catch (err) {
+    return [{ url: null, id: null, message: String(err?.message ?? err) }];
+  }
+}
+
+// Serialize syncs so overlapping calls never read the tree before the previous one finished creating.
+let syncChain = Promise.resolve();
+function serialSync(adds, removes) {
+  const p = syncChain.then(() => syncBookmarks(adds, removes));
+  syncChain = p.catch(() => {});
+  return p;
 }
 
 // ---- request routing -------------------------------------------------------
@@ -108,7 +120,7 @@ async function handleRequest(req) {
       if (resp.type === "error") return resp;
       const added = new Set(resp.added);
       const adds = req.adds.filter((a) => added.has(a.url));
-      const syncErrors = await syncBookmarks(adds, resp.removed);
+      const syncErrors = await serialSync(adds, resp.removed);
       return { ...resp, syncErrors };
     }
 
@@ -116,7 +128,7 @@ async function handleRequest(req) {
       const resp = await callHost({ type: "analyze", limit: 1, max_results: 0 });
       if (resp.type === "error") return resp;
       const adds = resp.saved.map((s) => ({ url: s.url, title: s.title, folder: s.folder }));
-      return { type: "resync", syncErrors: await syncBookmarks(adds, []) };
+      return { type: "resync", syncErrors: await serialSync(adds, []) };
     }
 
     default:
