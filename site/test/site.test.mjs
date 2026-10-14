@@ -87,3 +87,12 @@ test("the README tells the owner to set the custom domain in Pages settings", ()
   assert.match(readme, /Custom domain/);
   assert.match(readme, /link-sense\.codeforlife\.dev/);
 });
+
+test("the head links the SVG icon, the ICO fallback and the touch icon, in that order", () => {
+  const head = html.slice(html.indexOf("<head>"), html.indexOf("</head>"));
+  const svg = head.indexOf('<link rel="icon" href="favicon.svg" type="image/svg+xml">');
+  const ico = head.indexOf('<link rel="icon" href="favicon.ico" sizes="48x48">');
+  const touch = head.indexOf('<link rel="apple-touch-icon" href="apple-touch-icon.png">');
+  assert.ok(svg > -1 && ico > -1 && touch > -1, "all three icon links must be present");
+  assert.ok(svg < ico && ico < touch, "SVG first so supporting browsers prefer it");
+});

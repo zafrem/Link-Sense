@@ -43,7 +43,10 @@ test("site tests run before the artifact is uploaded, and upload happens before 
 });
 
 test("only publishable files are staged into _site and uploaded", () => {
-  assert.match(yml, /cp site\/index\.html site\/styles\.css site\/demo\.js site\/CNAME site\/\.nojekyll _site\//);
+  assert.match(
+    yml,
+    /cp site\/index\.html site\/styles\.css site\/demo\.js site\/CNAME site\/\.nojekyll site\/favicon\.svg site\/favicon\.ico site\/apple-touch-icon\.png _site\//,
+  );
   assert.match(yml, /path: _site/);
   assert.equal(/path: site\s*$/m.test(yml), false);
 });
