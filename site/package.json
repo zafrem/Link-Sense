@@ -1,0 +1,6 @@
+{
+  "name": "link-sense-site",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "node --test" }
+}
