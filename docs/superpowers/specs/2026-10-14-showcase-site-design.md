@@ -78,8 +78,7 @@ The DOM wiring in the same file builds all elements with `createElement` and `te
 - Triggers: `push` to `main` with `paths: ["site/**", ".github/workflows/pages.yml"]`, and `workflow_dispatch`.
 - Permissions: `contents: read`, `pages: write`, `id-token: write`.
 - `concurrency: { group: pages, cancel-in-progress: false }`.
-- Job `deploy` with `environment: github-pages`: `actions/checkout`, `actions/configure-pages`, `actions/upload-pages-artifact` with `path: site`, then `actions/deploy-pages`. Each action is pinned to an exact released version tag.
-- A step before the upload runs `cd site && npm test`, so a failing demo test blocks the deploy. Node is set up with `actions/setup-node` (Node 22).
+- Job `deploy` with `environment: github-pages`: `actions/checkout`, `actions/setup-node` (Node 22), a step that runs `cd site && npm test` (a failing test blocks the deploy), a step that copies only `index.html`, `styles.css`, `demo.js`, `CNAME` and `.nojekyll` into `_site/` (so tests and `package.json` are not published), `actions/configure-pages`, `actions/upload-pages-artifact` with `path: _site`, then `actions/deploy-pages`. Each action is pinned to an exact released version tag.
 
 ### One-time repository setup (done by the owner, not by this change)
 
