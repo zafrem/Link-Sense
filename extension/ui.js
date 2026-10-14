@@ -182,6 +182,7 @@ function render() {
 
 // ---- actions ---------------------------------------------------------------
 
+// Returns true when the reload succeeded, false when it failed (the error is already in the banner).
 async function load() {
   showBanner("Reading history…");
   try {
@@ -189,19 +190,26 @@ async function load() {
     state.candidates = resp.candidates;
     state.saved = resp.saved;
     state.truncated = resp.truncated;
-    showBanner(resp.truncated ? `Showing the top ${resp.candidates.length} candidates by score.` : "");
+    showBanner(truncatedNote());
+    render();
+    return true;
   } catch (err) {
     state.candidates = [];
     state.saved = [];
     showBanner(describeError(err), true);
+    render();
+    return false;
   }
-  render();
+}
+
+function truncatedNote() {
+  return state.truncated ? ` Showing the top ${state.candidates.length} candidates by score.` : "";
 }
 
 async function retrySync() {
   try {
     const resp = await send({ type: "resync" });
-    showBanner(resp.syncErrors.length ? `${resp.syncErrors.length} bookmarks could not be synced.` : "Synced.", resp.syncErrors.length > 0, resp.syncErrors.length ? retrySync : null);
+    showBanner(resp.syncErrors.length ? `${resp.syncErrors.length} bookmarks could not be synced.${truncatedNote()}` : `Synced.${truncatedNote()}`, resp.syncErrors.length > 0, resp.syncErrors.length ? retrySync : null);
   } catch (err) {
     showBanner(describeError(err), true, retrySync);
   }
@@ -214,11 +222,14 @@ async function apply() {
     const resp = await send({ type: "apply", ...payload });
     for (const url of [...resp.added, ...resp.removed, ...resp.missing]) delete state.choices[url];
     saveChoices();
-    await load();
-    if (resp.syncErrors.length) {
-      showBanner(`Saved, but ${resp.syncErrors.length} Chrome bookmarks failed to sync.`, true, retrySync);
-    } else {
-      showBanner(`Applied: ${resp.added.length} added, ${resp.removed.length} removed.`);
+    const reloaded = await load();
+    // If the reload failed, load() already left its error in the banner; do not overwrite it.
+    if (reloaded) {
+      if (resp.syncErrors.length) {
+        showBanner(`Saved, but ${resp.syncErrors.length} Chrome bookmarks failed to sync.${truncatedNote()}`, true, retrySync);
+      } else {
+        showBanner(`Applied: ${resp.added.length} added, ${resp.removed.length} removed.${truncatedNote()}`);
+      }
     }
   } catch (err) {
     showBanner(describeError(err), true);

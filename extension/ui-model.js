@@ -1,5 +1,5 @@
 export function entryFolder(entry, choices) {
-  return choices[entry.url]?.folder ?? entry.folder ?? "";
+  return choices[entry.url]?.folder || entry.folder || "";
 }
 
 export function filterEntries(entries, query) {

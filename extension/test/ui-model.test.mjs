@@ -10,6 +10,14 @@ test("entryFolder prefers the user's choice, then the stored folder, then unfile
   assert.equal(entryFolder(e("a", 1), {}), "");
 });
 
+test("a saved entry keeps its folder when the pending choice has an empty folder", () => {
+  const saved = e("s", 2, { folder: "Work" });
+  const choices = { s: { action: "remove", folder: "" } };
+  assert.equal(entryFolder(saved, choices), "Work");
+  const groups = groupByFolder([saved], choices);
+  assert.deepEqual(groups.map((g) => g.folder), ["Work"]);
+});
+
 test("filterEntries matches title or url case-insensitively", () => {
   const items = [e("https://Foo.example/", 1, { title: "Hello" }), e("https://bar.example/", 1, { title: "World" })];
   assert.equal(filterEntries(items, "foo").length, 1);
