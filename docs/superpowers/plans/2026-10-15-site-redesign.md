@@ -243,13 +243,11 @@ ids["skip-days"].value = "0";
 
 (and delete the old line `ids["decay-days"].value = "0";`).
 
-Add `formatScore` and `score` to the import from `../demo.js` at the top of the file:
+Do NOT add a static `import ... from "../demo.js"` to this file: static imports run before the stand-in DOM exists, so the wiring would never start. Instead change the existing line `await import("../demo.js");` to take the helpers from the dynamic import:
 
 ```js
-import { formatScore, score } from "../demo.js";
+const { formatScore, score } = await import("../demo.js");
 ```
-
-Place that import after the `assert` import, and note that the existing `await import("../demo.js");` line stays where it is.
 
 Insert this as the FIRST test after `const runTimers = ...` / `const resetDemo = ...` and the `await import("../demo.js");` line (so no other test has touched the list yet):
 
@@ -305,7 +303,7 @@ test("marked rows and folders survive a skip, and Reset returns the slider to ze
   await resetDemo();
   assert.equal(ids["skip-days"].value, "0");
   assert.equal(ids["skip-label"].textContent, "+0 days");
-  assert.equal(ids["demo-list"].children[0].style.getPropertyValue("--o"), String(opacityOf(ids["demo-list"].children[0])));
+  assert.equal(opacityOf(ids["demo-list"].children[0]) > 0.99, true, "after Reset the top row is back at full strength");
 });
 
 test("each row carries its entrance order and a strength bar", () => {
