@@ -213,3 +213,9 @@ test("the nav order is Demo, How it works, Scoring, Install, GitHub, then the ba
   const hrefs = [...nav.matchAll(/<a [^>]*href="([^"]+)"/g)].map((m) => m[1]);
   assert.deepEqual(hrefs, ["#demo", "#how", "#scoring", "#install", "https://github.com/zafrem/Link-Sense", "https://buymeacoffee.com/zafrem"]);
 });
+
+test("the focus ring stays visible on marked rows in both themes", () => {
+  assert.match(cssText(), /\.item\.marked :focus-visible\s*\{[^}]*outline-color:\s*var\(--marker-ink\)/);
+  const t = darkTokens();
+  assert.ok(contrast(t["marker-ink"], t.marker) >= 3, "marker-ink ring on the marker needs at least 3:1 non-text contrast");
+});

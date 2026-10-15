@@ -13,6 +13,7 @@ class FakeNode {
   }
   setAttribute(k, v) { this.attrs[k] = String(v); if (k === "value") this.value = String(v); }
   addEventListener(type, fn) { (this.listeners[type] ??= []).push(fn); }
+  scrollIntoView(options) { this.scrolls = [...(this.scrolls ?? []), options]; }
   async fire(type) { for (const fn of this.listeners[type] ?? []) await fn({}); }
   append(...kids) { for (const k of kids) this.children.push(typeof k === "string" ? Object.assign(new FakeNode("#text"), { _text: k }) : k); }
   replaceChildren(...kids) { this.children = []; this.append(...kids); }
@@ -38,7 +39,10 @@ globalThis.document = {
   createElement: (tag) => new FakeNode(tag),
   querySelectorAll: () => [copyButton],
 };
-globalThis.window = { getSelection: () => ({ selectAllChildren: (node) => { selected = node; } }) };
+globalThis.window = {
+  getSelection: () => ({ selectAllChildren: (node) => { selected = node; } }),
+  matchMedia: () => ({ matches: false }),
+};
 Object.defineProperty(globalThis, "navigator", {
   value: { clipboard: { writeText: () => Promise.reject(new Error("denied")) } },
   configurable: true,
@@ -165,4 +169,24 @@ test("each row carries its entrance order and a strength bar", () => {
   assert.equal(bar.children[0].style.width, "100%");
   const last = rows[rows.length - 1].children[0].children[3];
   assert.ok(Number.parseInt(last.children[0].style.width, 10) >= 2);
+});
+
+test("Apply scrolls the result into view so the outcome is visible", async () => {
+  await resetDemo();
+  await ids["demo-list"].children[0].children[2].fire("click");
+  ids["demo-result"].scrolls = [];
+  await ids["demo-apply"].fire("click");
+  assert.equal(ids["demo-result"].scrolls.length, 1);
+  assert.equal(ids["demo-result"].scrolls[0].block, "nearest");
+  assert.equal(ids["demo-result"].scrolls[0].behavior, "smooth");
+});
+
+test("with reduced motion, Apply scrolls the result into view without animation", async () => {
+  await resetDemo();
+  await ids["demo-list"].children[0].children[2].fire("click");
+  ids["demo-result"].scrolls = [];
+  globalThis.window.matchMedia = () => ({ matches: true });
+  await ids["demo-apply"].fire("click");
+  globalThis.window.matchMedia = () => ({ matches: false });
+  assert.equal(ids["demo-result"].scrolls[0].behavior, "auto");
 });

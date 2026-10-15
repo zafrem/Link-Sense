@@ -235,6 +235,9 @@ function initDemo() {
       .filter((e) => choiceFor(e.url).add)
       .map((e) => ({ title: e.title, url: e.url, folder: normalizeFolder(choiceFor(e.url).folder) }));
     renderTree(result, buildFolderTree(items));
+    // On wide screens the result renders far below the Apply button, so bring it into view.
+    const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    result.scrollIntoView({ block: "nearest", behavior: reduced ? "auto" : "smooth" });
   });
   resetButton.addEventListener("click", () => {
     choices.clear();
