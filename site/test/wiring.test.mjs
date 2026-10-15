@@ -4,7 +4,12 @@ import assert from "node:assert/strict";
 // A tiny DOM stand-in, just enough to run the wiring in demo.js under Node.
 class FakeNode {
   constructor(tag) {
-    Object.assign(this, { tagName: tag, children: [], attrs: {}, listeners: {}, _text: "", className: "", style: {}, dataset: {}, disabled: false, value: "" });
+    Object.assign(this, { tagName: tag, children: [], attrs: {}, listeners: {}, _text: "", className: "", dataset: {}, disabled: false, value: "" });
+    this.style = {
+      props: {},
+      setProperty(name, value) { this.props[name] = String(value); },
+      getPropertyValue(name) { return this.props[name] ?? ""; },
+    };
   }
   setAttribute(k, v) { this.attrs[k] = String(v); if (k === "value") this.value = String(v); }
   addEventListener(type, fn) { (this.listeners[type] ??= []).push(fn); }
@@ -16,10 +21,10 @@ class FakeNode {
 }
 
 const ids = {};
-for (const id of ["demo-list", "demo-search", "demo-apply", "demo-reset", "demo-result", "decay-days", "decay-score", "decay-bar", "decay-label", "cmd-install"]) {
+for (const id of ["demo-list", "demo-search", "demo-apply", "demo-reset", "demo-result", "skip-days", "skip-label", "cmd-install"]) {
   ids[id] = new FakeNode("div");
 }
-ids["decay-days"].value = "0";
+ids["skip-days"].value = "0";
 ids["cmd-install"].textContent = "pip install -e .";
 const copyButton = new FakeNode("button");
 copyButton.dataset.copyTarget = "cmd-install";
@@ -43,7 +48,14 @@ globalThis.clearTimeout = (id) => { timers.delete(id); };
 const resetDemo = () => ids["demo-reset"].fire("click");
 const runTimers = () => { for (const [id, fn] of [...timers]) { timers.delete(id); fn(); } };
 
-await import("../demo.js");
+const { formatScore, score } = await import("../demo.js");
+
+test("the entrance animation flag is set on load and removed by the first interaction", async () => {
+  assert.equal(ids["demo-list"].dataset.intro, "1");
+  ids["demo-search"].value = "";
+  await ids["demo-search"].fire("input");
+  assert.equal(ids["demo-list"].dataset.intro, undefined);
+});
 
 test("the copy button returns to its original label after repeated clicks", async () => {
   await copyButton.fire("click");
@@ -101,4 +113,56 @@ test("apply renders folder names and titles as text and reset clears the result"
   await ids["demo-reset"].fire("click");
   assert.equal(ids["demo-result"].children.length, 0);
   assert.equal(ids["demo-apply"].disabled, true);
+});
+
+const titles = () => ids["demo-list"].children.map((row) => row.children[0].children[0].textContent);
+const scoreText = (row) => row.children[0].children[2].children[0].textContent;
+const opacityOf = (row) => Number(row.style.getPropertyValue("--o"));
+
+test("skipping ahead re-scores and fades every row but keeps the order", async () => {
+  await resetDemo();
+  const before = titles();
+  const firstBefore = opacityOf(ids["demo-list"].children[0]);
+  ids["skip-days"].value = "30";
+  await ids["skip-days"].fire("input");
+  assert.deepEqual(titles(), before, "every page ages equally, so the order cannot change");
+  const first = ids["demo-list"].children[0];
+  assert.equal(scoreText(first), formatScore(score(120, 30.1)));
+  assert.ok(opacityOf(first) < firstBefore, "the top row fades as time passes");
+  assert.ok(opacityOf(first) >= 0.7, "faded rows stay readable");
+  assert.equal(ids["skip-label"].textContent, "+30 days");
+});
+
+test("the skip label is singular for one day", async () => {
+  ids["skip-days"].value = "1";
+  await ids["skip-days"].fire("input");
+  assert.equal(ids["skip-label"].textContent, "+1 day");
+});
+
+test("marked rows and folders survive a skip, and Reset returns the slider to zero", async () => {
+  await resetDemo();
+  const [, folderInput, toggle] = ids["demo-list"].children[0].children;
+  folderInput.value = "Daily";
+  await folderInput.fire("change");
+  await toggle.fire("click");
+  ids["skip-days"].value = "10";
+  await ids["skip-days"].fire("input");
+  const row = ids["demo-list"].children[0];
+  assert.match(row.className, /marked/);
+  assert.equal(row.children[2].attrs["aria-pressed"], "true");
+  assert.equal(row.children[1].value, "Daily");
+  await resetDemo();
+  assert.equal(ids["skip-days"].value, "0");
+  assert.equal(ids["skip-label"].textContent, "+0 days");
+  assert.equal(opacityOf(ids["demo-list"].children[0]) > 0.99, true, "after Reset the top row is back at full strength");
+});
+
+test("each row carries its entrance order and a strength bar", () => {
+  const rows = ids["demo-list"].children;
+  assert.equal(rows[0].style.getPropertyValue("--i"), "0");
+  assert.equal(rows[3].style.getPropertyValue("--i"), "3");
+  const bar = rows[0].children[0].children[3];
+  assert.equal(bar.children[0].style.width, "100%");
+  const last = rows[rows.length - 1].children[0].children[3];
+  assert.ok(Number.parseInt(last.children[0].style.width, 10) >= 2);
 });

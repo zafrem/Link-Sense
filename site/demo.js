@@ -102,7 +102,6 @@ function el(tag, props = {}, ...children) {
   for (const [key, value] of Object.entries(props)) {
     if (key === "text") node.textContent = value;
     else if (key === "class") node.className = value;
-    else if (key.startsWith("on")) node.addEventListener(key.slice(2), value);
     else node.setAttribute(key, value);
   }
   node.append(...children);
@@ -135,10 +134,19 @@ function initDemo() {
   const applyButton = document.getElementById("demo-apply");
   const resetButton = document.getElementById("demo-reset");
   const result = document.getElementById("demo-result");
-  const ranked = rank(SAMPLE);
+  const slider = document.getElementById("skip-days");
+  const skipLabel = document.getElementById("skip-label");
   const choices = new Map();
+  let skip = 0;
+  list.dataset.intro = "1"; // the entrance animation plays once, until the first interaction
 
   const choiceFor = (url) => choices.get(url) ?? { add: false, folder: "" };
+  const current = () => rank(SAMPLE, skip);
+  const endIntro = () => { delete list.dataset.intro; };
+
+  function updateSkipLabel() {
+    skipLabel.textContent = `+${skip} ${skip === 1 ? "day" : "days"}`;
+  }
 
   function refresh() {
     const n = countAdds(choices);
@@ -148,14 +156,34 @@ function initDemo() {
 
   function renderList() {
     list.replaceChildren();
-    const shown = filterEntries(ranked, search.value);
+    const shown = filterEntries(current(), search.value);
     if (shown.length === 0) {
       list.append(el("li", { class: "empty", text: "No pages match" }));
       return;
     }
-    for (const entry of shown) {
-      const current = choiceFor(entry.url);
-      const row = el("li", { class: current.add ? "item marked" : "item" });
+    shown.forEach((entry, index) => {
+      const t = strength(entry.score);
+      const chosen = choiceFor(entry.url);
+      const row = el("li", { class: chosen.add ? "item marked" : "item" });
+      row.style.setProperty("--i", String(index));
+      row.style.setProperty("--o", String(textOpacity(t)));
+
+      const fill = el("span", { class: "bar-fill" });
+      fill.style.width = `${Math.max(2, Math.round(t * 100))}%`;
+      const info = el(
+        "div",
+        { class: "info" },
+        el("span", { class: "title", text: entry.title }),
+        el("span", { class: "url", text: entry.url }),
+        el(
+          "span",
+          { class: "figures" },
+          el("span", { class: "score", text: formatScore(entry.score) }),
+          el("span", { class: "age", text: formatAge(entry.days) }),
+        ),
+        el("span", { class: "bar-track" }, fill),
+      );
+
       const folderInput = el("input", {
         class: "folder-input",
         type: "text",
@@ -163,20 +191,22 @@ function initDemo() {
         placeholder: "Folder",
         maxlength: String(MAX_FOLDER_LENGTH),
         "aria-label": `Folder for ${entry.title}`,
-        value: current.folder,
+        value: chosen.folder,
       });
       folderInput.addEventListener("change", () => {
         folderInput.value = normalizeFolder(folderInput.value);
         choices.set(entry.url, { ...choiceFor(entry.url), folder: folderInput.value });
       });
+
       const toggle = el("button", {
-        class: "button ghost toggle",
+        class: "toggle",
         type: "button",
-        "aria-pressed": String(current.add),
+        "aria-pressed": String(chosen.add),
         "aria-label": `Add ${entry.title}`,
-        text: current.add ? "Added" : "Add",
+        text: chosen.add ? "Added" : "Add",
       });
       toggle.addEventListener("click", () => {
+        endIntro();
         const next = { ...choiceFor(entry.url), add: !choiceFor(entry.url).add };
         choices.set(entry.url, next);
         toggle.textContent = next.add ? "Added" : "Add";
@@ -184,24 +214,24 @@ function initDemo() {
         row.className = next.add ? "item marked" : "item";
         refresh();
       });
-      row.append(
-        el(
-          "div",
-          { class: "info" },
-          el("span", { class: "title", text: entry.title }),
-          el("span", { class: "url", text: entry.url }),
-          el("span", { class: "meta", text: `Score ${entry.score} · ${entry.visits} visits · ${entry.days} days ago` }),
-        ),
-        folderInput,
-        toggle,
-      );
+
+      row.append(info, folderInput, toggle);
       list.append(row);
-    }
+    });
   }
 
-  search.addEventListener("input", renderList);
+  search.addEventListener("input", () => {
+    endIntro();
+    renderList();
+  });
+  slider.addEventListener("input", () => {
+    skip = Number(slider.value);
+    endIntro();
+    updateSkipLabel();
+    renderList();
+  });
   applyButton.addEventListener("click", () => {
-    const items = ranked
+    const items = current()
       .filter((e) => choiceFor(e.url).add)
       .map((e) => ({ title: e.title, url: e.url, folder: normalizeFolder(choiceFor(e.url).folder) }));
     renderTree(result, buildFolderTree(items));
@@ -209,31 +239,18 @@ function initDemo() {
   resetButton.addEventListener("click", () => {
     choices.clear();
     search.value = "";
+    skip = 0;
+    slider.value = "0";
+    updateSkipLabel();
     result.replaceChildren();
+    endIntro();
     renderList();
     refresh();
   });
 
+  updateSkipLabel();
   renderList();
   refresh();
-}
-
-function initDecay() {
-  const slider = document.getElementById("decay-days");
-  if (!slider) return;
-  const out = document.getElementById("decay-score");
-  const bar = document.getElementById("decay-bar");
-  const label = document.getElementById("decay-label");
-  const VISITS = 10;
-  const update = () => {
-    const days = Number(slider.value);
-    const s = score(VISITS, days);
-    out.textContent = s.toFixed(2);
-    bar.style.width = `${(s / VISITS) * 100}%`;
-    label.textContent = `${days} day${days === 1 ? "" : "s"} since last visit`;
-  };
-  slider.addEventListener("input", update);
-  update();
 }
 
 function initCopy() {
@@ -256,6 +273,5 @@ function initCopy() {
 
 if (typeof document !== "undefined") {
   initDemo();
-  initDecay();
   initCopy();
 }

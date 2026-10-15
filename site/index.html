@@ -14,11 +14,11 @@
 </head>
 <body>
   <header class="top">
-    <div class="wrap bar">
+    <div class="bar">
       <a class="brand" href="#top">Link Sense</a>
       <nav aria-label="Sections">
-        <a href="#how">How it works</a>
         <a href="#demo">Demo</a>
+        <a href="#how">How it works</a>
         <a href="#scoring">Scoring</a>
         <a href="#install">Install</a>
         <a href="https://github.com/zafrem/Link-Sense">GitHub</a>
@@ -28,18 +28,41 @@
   </header>
 
   <main id="top">
-    <section class="hero wrap">
-      <p class="eyebrow">Browser history, put to work</p>
-      <h1>Bookmark what you actually use.</h1>
-      <p class="lead">Link Sense reads your Chrome or Firefox history, ranks every page by how often and how recently you visit it, and lets you turn the winners into tidy bookmark folders. Everything happens on your machine.</p>
-      <p class="actions">
-        <a class="button" href="#install">Get started</a>
-        <a class="button ghost" href="#demo">Try the demo</a>
-        <a class="button ghost" href="https://github.com/zafrem/Link-Sense">View on GitHub</a>
-      </p>
+    <section class="hero">
+      <div class="hero-copy">
+        <h1>Your history, ranked by what you still use.</h1>
+        <p class="lead">Link Sense scores every page in your browser history by how often and how recently you visit it, so the bookmarks you keep are the ones you actually open.</p>
+        <p class="actions">
+          <a class="button" href="#install">Install the extension</a>
+          <a class="text-link" href="https://github.com/zafrem/Link-Sense">Read the code</a>
+        </p>
+      </div>
+
+      <div id="demo" class="ledger">
+        <noscript><p class="notice">Enable JavaScript to try the demo.</p></noscript>
+        <div class="toolbar">
+          <label class="sr-only" for="demo-search">Search sample pages</label>
+          <input id="demo-search" type="search" placeholder="Search your history" autocomplete="off">
+          <button id="demo-apply" class="button" type="button" disabled>Apply</button>
+          <button id="demo-reset" class="text-button" type="button">Reset</button>
+        </div>
+        <div class="skip">
+          <label for="skip-days">Skip ahead without visiting anything</label>
+          <input id="skip-days" type="range" min="0" max="60" step="1" value="0">
+          <output id="skip-label" for="skip-days">+0 days</output>
+        </div>
+        <datalist id="demo-folders">
+          <option value="Docs"></option>
+          <option value="Reading"></option>
+          <option value="Tools"></option>
+        </datalist>
+        <ul id="demo-list" class="items" aria-label="Sample pages, highest score first"></ul>
+        <div id="demo-result" class="result" role="region" aria-live="polite" aria-label="Resulting bookmarks"></div>
+        <p class="fine">Sample data only. Nothing here reads your real history or leaves this page.</p>
+      </div>
     </section>
 
-    <section id="how" class="wrap">
+    <section id="how" class="band">
       <h2>How it works</h2>
       <ol class="steps">
         <li><h3>Analyze</h3><p>Reads your local history, copies the database first so the original is never touched, and scores every URL.</p></li>
@@ -49,70 +72,41 @@
       <p class="note">Use it as a <strong>Chrome extension</strong> (recommended) or as a <strong>CLI</strong> that writes an HTML report and an <code>apply.sh</code> script.</p>
     </section>
 
-    <section id="demo" class="wrap">
-      <h2>Try it</h2>
-      <p class="muted">Sample data only. Nothing here reads your real history or leaves this page.</p>
-      <noscript><p class="notice">Enable JavaScript to try the demo.</p></noscript>
-      <div class="panel">
-        <div class="toolbar">
-          <label class="sr-only" for="demo-search">Search sample pages</label>
-          <input id="demo-search" type="search" placeholder="Search title or URL" autocomplete="off">
-          <button id="demo-apply" class="button" type="button" disabled>Apply</button>
-          <button id="demo-reset" class="button ghost" type="button">Reset</button>
-        </div>
-        <datalist id="demo-folders">
-          <option value="Docs"></option>
-          <option value="Reading"></option>
-          <option value="Tools"></option>
-        </datalist>
-        <ul id="demo-list" class="items" aria-label="Sample pages, highest score first"></ul>
-        <div id="demo-result" class="result" role="region" aria-live="polite" aria-label="Resulting bookmarks"></div>
-      </div>
-    </section>
-
-    <section id="scoring" class="wrap">
+    <section id="scoring" class="band">
       <h2>Scoring</h2>
-      <p>Each page gets one number:</p>
       <pre class="formula"><code>score = visit_count × e^(−0.1 × days_since_last_visit)</code></pre>
-      <p>Pages you visit often and recently rank highest, and old pages fade on their own. Drag the slider to see a page with 10 visits decay.</p>
-      <div class="decay">
-        <label for="decay-days">Days since last visit</label>
-        <input id="decay-days" type="range" min="0" max="60" step="1" value="0">
-        <p id="decay-label" class="muted">0 days since last visit</p>
-        <div class="meter" aria-hidden="true"><div id="decay-bar" class="meter-fill"></div></div>
-        <p class="big">Score: <output id="decay-score" for="decay-days">10.00</output></p>
-      </div>
+      <p>Pages you visit often and recently rank highest. Pages you stop visiting fade on their own: use the slider above to skip ahead and watch every score shrink.</p>
     </section>
 
-    <section id="install" class="wrap">
+    <section id="install" class="band">
       <h2>Install</h2>
       <p class="muted">Chrome extension, Linux with Chrome or Chromium (native installs; Snap and Flatpak builds are not supported).</p>
       <ol class="install">
         <li>
           <p>Install the package from the repository root:</p>
-          <div class="cmd"><pre><code id="cmd-install">pip install -e .</code></pre><button class="button ghost" type="button" data-copy-target="cmd-install">Copy</button></div>
+          <div class="cmd"><pre><code id="cmd-install">pip install -e .</code></pre><button class="copy" type="button" data-copy-target="cmd-install">Copy</button></div>
         </li>
         <li>
           <p>Register the native-messaging host:</p>
-          <div class="cmd"><pre><code id="cmd-host">link-sense install-host</code></pre><button class="button ghost" type="button" data-copy-target="cmd-host">Copy</button></div>
+          <div class="cmd"><pre><code id="cmd-host">link-sense install-host</code></pre><button class="copy" type="button" data-copy-target="cmd-host">Copy</button></div>
         </li>
         <li>
           <p>Open the extensions page, switch on <strong>Developer mode</strong>, choose <strong>Load unpacked</strong> and select the <code>extension/</code> folder:</p>
-          <div class="cmd"><pre><code id="cmd-url">chrome://extensions</code></pre><button class="button ghost" type="button" data-copy-target="cmd-url">Copy</button></div>
+          <div class="cmd"><pre><code id="cmd-url">chrome://extensions</code></pre><button class="copy" type="button" data-copy-target="cmd-url">Copy</button></div>
         </li>
         <li><p>Click the Link Sense toolbar icon, pick pages, and press <strong>Apply</strong>. Bookmarks appear under <strong>Other bookmarks → Link Sense</strong>.</p></li>
       </ol>
       <p>Prefer the command line? <code>link-sense analyze</code> writes an interactive HTML report. See the <a href="https://github.com/zafrem/Link-Sense#readme">README</a> for details.</p>
     </section>
 
-    <section id="privacy" class="wrap">
+    <section id="privacy" class="band">
       <h2>Privacy</h2>
       <p>Your history stays on your computer. Link Sense copies the browser's history database to a temporary file before reading it, never modifies the original, and sends nothing over the network. This site has no analytics, cookies or third-party scripts. The one outside request it makes is the Buy Me A Coffee badge in the header, an image served by img.shields.io.</p>
     </section>
   </main>
 
-  <footer class="wrap foot">
-    <p><a href="https://github.com/zafrem/Link-Sense">Link Sense on GitHub</a> · link-sense.codeforlife.dev</p>
+  <footer class="foot">
+    <p><a href="https://github.com/zafrem/Link-Sense">Link Sense on GitHub</a> and link-sense.codeforlife.dev</p>
   </footer>
 </body>
 </html>

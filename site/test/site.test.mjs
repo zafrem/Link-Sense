@@ -64,7 +64,7 @@ test("no third-party scripts, fonts or inline handlers", () => {
 test("all element ids the demo wiring needs are present", () => {
   for (const id of [
     "demo", "demo-search", "demo-list", "demo-folders", "demo-apply", "demo-reset", "demo-result",
-    "decay-days", "decay-score", "decay-bar", "decay-label",
+    "skip-days", "skip-label",
   ]) {
     assert.ok(html.includes(`id="${id}"`), `missing id="${id}"`);
   }
@@ -80,14 +80,8 @@ test("the demo has a noscript notice", () => {
   assert.match(html, /<noscript>[\s\S]*JavaScript[\s\S]*<\/noscript>/);
 });
 
-test("content sections keep their vertical padding and anchors clear the sticky header", () => {
-  const css = readFileSync(path.join(siteDir, "styles.css"), "utf8");
-  assert.match(css, /section\.wrap\s*\{[^}]*padding:\s*48px 16px/);
-  assert.match(css, /scroll-padding-top:\s*\d+px/);
-});
-
 test("the hero links to the GitHub repository", () => {
-  const hero = html.slice(html.indexOf('class="hero wrap"'), html.indexOf("</section>", html.indexOf('class="hero wrap"')));
+  const hero = html.slice(html.indexOf('<section class="hero">'), html.indexOf("</section>", html.indexOf('<section class="hero">')));
   assert.match(hero, /href="https:\/\/github\.com\/zafrem\/Link-Sense"/);
 });
 
@@ -134,4 +128,88 @@ test("narrow screens raise the anchor clearance to cover the taller, wrapped hea
   const match = css.match(/@media \(max-width:\s*700px\)\s*\{[^@]*?html\s*\{[^}]*scroll-padding-top:\s*(\d+)px/);
   assert.ok(match, "a max-width: 700px rule must set scroll-padding-top");
   assert.ok(Number(match[1]) >= 136, "phone header measured 126px; clearance must exceed it");
+});
+
+const cssText = () => readFileSync(path.join(siteDir, "styles.css"), "utf8");
+
+function hexLuminance(hex) {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+  const lin = (c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+}
+function contrast(a, b) {
+  const [hi, lo] = [hexLuminance(a), hexLuminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+function blend(fg, bg, alpha) {
+  const mix = (i) => Math.round(alpha * parseInt(fg.slice(i, i + 2), 16) + (1 - alpha) * parseInt(bg.slice(i, i + 2), 16));
+  return `#${[1, 3, 5].map((i) => mix(i).toString(16).padStart(2, "0")).join("")}`;
+}
+function tokensIn(block) {
+  return Object.fromEntries([...block.matchAll(/--([a-z-]+):\s*(#[0-9a-fA-F]{6})/g)].map((m) => [m[1], m[2].toLowerCase()]));
+}
+const lightTokens = () => tokensIn(cssText().match(/:root\s*\{([^}]*)\}/)[1]);
+const darkTokens = () => tokensIn(cssText().match(/@media \(prefers-color-scheme: dark\)\s*\{\s*:root\s*\{([^}]*)\}/)[1]);
+
+test("the colour tokens exist in both themes", () => {
+  for (const tokens of [lightTokens(), darkTokens()]) {
+    for (const name of ["paper", "ink", "rule", "muted", "marker", "marker-ink", "marker-muted", "strip", "strip-fg"]) {
+      assert.ok(tokens[name], `missing token --${name}`);
+    }
+  }
+  assert.equal(lightTokens().paper, "#f6f7f9");
+  assert.equal(darkTokens().paper, "#15171d");
+});
+
+test("every text and surface pair meets 4.5:1 in both themes, including 70% faded titles", () => {
+  for (const [theme, t] of [["light", lightTokens()], ["dark", darkTokens()]]) {
+    const pairs = [
+      ["ink on paper", t.ink, t.paper],
+      ["muted on paper", t.muted, t.paper],
+      ["faded title (ink at 70%) on paper", blend(t.ink, t.paper, 0.7), t.paper],
+      ["marker-ink on marker", t["marker-ink"], t.marker],
+      ["marker-muted on marker", t["marker-muted"], t.marker],
+      ["strip-fg on strip", t["strip-fg"], t.strip],
+    ];
+    for (const [name, fg, bg] of pairs) {
+      assert.ok(contrast(fg, bg) >= 4.5, `${theme}: ${name} is ${contrast(fg, bg).toFixed(2)}:1`);
+    }
+  }
+});
+
+test("the old template look is gone", () => {
+  const css = cssText();
+  assert.equal(/text-transform:\s*uppercase/i.test(css), false, "no ALL-CAPS labels");
+  assert.equal(/ui-serif|Georgia|Times New Roman/i.test(css), false, "no serif display face");
+  assert.equal(/#0f766e|#fbfaf7|#d9efec/i.test(css), false, "no teal or cream tokens");
+  assert.equal(/counter\(step\)|counter-reset/i.test(css), false, "no numbered circles");
+  assert.equal(/class="eyebrow"/.test(html), false, "no eyebrow label");
+});
+
+test("no web fonts or remote CSS resources", () => {
+  assert.equal(/@font-face|@import|url\(/i.test(cssText()), false);
+});
+
+test("reduced motion switches off the entrance animation and transitions", () => {
+  const block = cssText().match(/@media \(prefers-reduced-motion:\s*reduce\)\s*\{([\s\S]*?)\n\}/);
+  assert.ok(block, "a prefers-reduced-motion block must exist");
+  assert.match(block[1], /animation:\s*none/);
+  assert.match(block[1], /transition:\s*none/);
+});
+
+test("the hero holds the headline, the ledger and the GitHub link", () => {
+  const start = html.indexOf('<section class="hero">');
+  const hero = html.slice(start, html.indexOf("</section>", start));
+  assert.equal((hero.match(/<h1[\s>]/g) ?? []).length, 1);
+  assert.ok(hero.includes('id="demo"'), "the ledger lives in the hero");
+  assert.match(hero, /Your history, ranked by what you still use\./);
+  assert.match(hero, /Install the extension/);
+  assert.match(hero, /Read the code/);
+});
+
+test("the nav order is Demo, How it works, Scoring, Install, GitHub, then the badge", () => {
+  const start = html.indexOf('<nav aria-label="Sections">');
+  const nav = html.slice(start, html.indexOf("</nav>", start));
+  const hrefs = [...nav.matchAll(/<a [^>]*href="([^"]+)"/g)].map((m) => m[1]);
+  assert.deepEqual(hrefs, ["#demo", "#how", "#scoring", "#install", "https://github.com/zafrem/Link-Sense", "https://buymeacoffee.com/zafrem"]);
 });
