@@ -39,20 +39,18 @@ test("every in-page anchor has a matching id", () => {
   }
 });
 
-const BADGE_HREF = "https://buymeacoffee.com/zafrem";
-const BADGE_SRC =
-  "https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&amp;logo=buy-me-a-coffee&amp;logoColor=black";
-const BADGE_LINK =
-  `<a class="coffee" href="${BADGE_HREF}" rel="noopener"><img src="${BADGE_SRC}" alt="Buy Me A Coffee" width="162" height="28"></a>`;
+const COFFEE_HREF = "https://buymeacoffee.com/zafrem";
+const COFFEE_SENTENCE = `If Link Sense saves you time, you can <a href="${COFFEE_HREF}" rel="noopener">buy me a coffee</a>.`;
 
-test("external links go only to the repository, the coffee link and the badge image", () => {
+test("external links go only to the repository and the coffee link, and nothing loads from another site", () => {
   const external = [...html.matchAll(/\b(?:href|src)="(https?:[^"]+)"/g)].map((m) => m[1]);
   for (const url of external) {
-    const allowed = url.startsWith("https://github.com/zafrem/Link-Sense") || url === BADGE_HREF || url === BADGE_SRC;
+    const allowed = url.startsWith("https://github.com/zafrem/Link-Sense") || url === COFFEE_HREF;
     assert.ok(allowed, `unexpected external reference: ${url}`);
   }
-  assert.ok(external.includes(BADGE_HREF), "the coffee link must be present");
-  assert.ok(external.includes(BADGE_SRC), "the badge image must be present");
+  assert.ok(external.includes(COFFEE_HREF), "the coffee link must be present");
+  assert.equal(/\ssrc="(?:https?:)?\/\//.test(html), false, "no resource may load from another site");
+  assert.equal(/<img[^>]+src="https?:/.test(html), false, "no remote images");
 });
 
 test("no third-party scripts, fonts or inline handlers", () => {
@@ -100,27 +98,30 @@ test("the head links the SVG icon, the ICO fallback and the touch icon, in that 
   assert.ok(svg < ico && ico < touch, "SVG first so supporting browsers prefer it");
 });
 
-test("the header nav ends with the exact Buy Me A Coffee badge link", () => {
-  const start = html.indexOf('<nav aria-label="Sections">');
-  const nav = html.slice(start, html.indexOf("</nav>", start));
-  assert.ok(nav.includes(BADGE_LINK), "badge link markup must match exactly (URL, &amp; escaping, alt, height, rel)");
-  const anchors = nav.split("<a ").slice(1);
-  assert.ok(anchors.at(-1).startsWith('class="coffee"'), "the badge must be the last item in the nav");
-  assert.ok(anchors.length >= 2, "the other nav links must still be there");
+test("the coffee link is plain text in the footer, after the Privacy section, and not in the header", () => {
+  const navStart = html.indexOf('<nav aria-label="Sections">');
+  const nav = html.slice(navStart, html.indexOf("</nav>", navStart));
+  assert.equal(nav.includes("buymeacoffee"), false, "the header nav must not carry the coffee link");
+  assert.equal(/<img/.test(nav), false, "no image in the header");
+  const footStart = html.indexOf('<footer class="foot">');
+  const footer = html.slice(footStart, html.indexOf("</footer>", footStart));
+  assert.ok(footer.includes(COFFEE_SENTENCE), "footer must hold the exact sentence and link");
+  assert.equal(/<img/.test(footer), false, "plain text, not a badge");
+  assert.ok(footStart > html.indexOf('id="privacy"'), "the footer comes after the Privacy section");
 });
 
-test("the Privacy section discloses the one outside request", () => {
+test("the Privacy section says nothing loads from other sites", () => {
   const start = html.indexOf('id="privacy"');
   const section = html.slice(start, html.indexOf("</section>", start));
   assert.match(section, /no analytics, cookies or third-party scripts/);
-  assert.match(section, /img\.shields\.io/);
+  assert.match(section, /loads nothing from other sites/);
+  assert.equal(/shields/i.test(html), false, "no trace of the badge host remains");
 });
 
-test("the badge is styled to sit centred in the header without a baseline gap", () => {
-  const css = readFileSync(path.join(siteDir, "styles.css"), "utf8");
-  assert.match(css, /\.coffee\s*\{[^}]*display:\s*inline-flex[^}]*align-items:\s*center/);
-  assert.match(css, /\.coffee img\s*\{[^}]*display:\s*block[^}]*height:\s*28px/);
-  assert.match(css, /\nnav\s*\{[^}]*align-items:\s*center/);
+test("no badge styles remain, and the footer link is styled like the other footer text", () => {
+  const css = cssText();
+  assert.equal(/\.coffee/.test(css), false);
+  assert.match(css, /\.foot a\s*\{[^}]*color:\s*var\(--muted\)/);
 });
 
 test("narrow screens raise the anchor clearance to cover the taller, wrapped header", () => {
@@ -207,11 +208,11 @@ test("the hero holds the headline, the ledger and the GitHub link", () => {
   assert.match(hero, /Read the code/);
 });
 
-test("the nav order is Demo, How it works, Scoring, Install, GitHub, then the badge", () => {
+test("the nav order is Demo, How it works, Scoring, Install, GitHub", () => {
   const start = html.indexOf('<nav aria-label="Sections">');
   const nav = html.slice(start, html.indexOf("</nav>", start));
   const hrefs = [...nav.matchAll(/<a [^>]*href="([^"]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(hrefs, ["#demo", "#how", "#scoring", "#install", "https://github.com/zafrem/Link-Sense", "https://buymeacoffee.com/zafrem"]);
+  assert.deepEqual(hrefs, ["#demo", "#how", "#scoring", "#install", "https://github.com/zafrem/Link-Sense"]);
 });
 
 test("the focus ring stays visible on marked rows in both themes", () => {

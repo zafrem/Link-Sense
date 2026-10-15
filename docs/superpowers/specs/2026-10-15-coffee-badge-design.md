@@ -1,7 +1,7 @@
 # Buy Me A Coffee Badge on the Showcase Site — Design
 
 Date: 2026-10-15
-Status: Draft for review
+Status: Superseded on 2026-10-15. The owner found the badge too prominent, so it was removed from the header and replaced by a plain-text line in the page footer ("If Link Sense saves you time, you can buy me a coffee.", linking to https://buymeacoffee.com/zafrem). The site no longer loads anything from img.shields.io, and the Privacy section says it loads nothing from other sites. This document is kept for history.
 
 ## Goal
 

@@ -23,7 +23,7 @@ Publish a showcase website for Link Sense at `https://link-sense.codeforlife.dev
 
 ## Non-goals
 
-- Analytics, cookies or any third-party scripts or fonts. One exception: the Buy Me A Coffee badge image, loaded from img.shields.io (see `2026-10-15-coffee-badge-design.md`).
+- Analytics, cookies or any third-party scripts or fonts.
 - A static-site generator, framework or bundler.
 - Screenshots, GIFs or a custom 404 page.
 - Reading any real browser history on the page. The demo uses sample data only.
