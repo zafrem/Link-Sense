@@ -25,9 +25,34 @@ export function score(visitCount, daysSinceVisit) {
   return Math.round(visitCount * Math.exp(-DECAY_LAMBDA * daysSinceVisit) * 1000) / 1000;
 }
 
-export function rank(entries) {
+export const STRENGTH_CEILING = 120; // the highest visit count in SAMPLE
+
+// 0..1 measure of how strong a score is, on a log scale so a few hot pages do not flatten the rest.
+export function strength(scoreValue) {
+  const t = Math.log10(1 + Math.max(0, scoreValue)) / Math.log10(1 + STRENGTH_CEILING);
+  return Math.min(1, Math.max(0, t));
+}
+
+// Row titles never drop below 0.7 opacity, which keeps them at 4.5:1 contrast or better.
+export function textOpacity(t) {
+  return 0.7 + 0.3 * Math.min(1, Math.max(0, t));
+}
+
+export function formatAge(days) {
+  const rounded = Math.round(days * 10) / 10;
+  return Number.isInteger(rounded) ? `${rounded}d` : `${rounded.toFixed(1)}d`;
+}
+
+export function formatScore(scoreValue) {
+  return scoreValue >= 10 ? scoreValue.toFixed(1) : scoreValue.toFixed(2);
+}
+
+export function rank(entries, extraDays = 0) {
   return entries
-    .map((e) => ({ ...e, score: score(e.visits, e.days) }))
+    .map((e) => {
+      const days = e.days + extraDays;
+      return { ...e, days, score: score(e.visits, days) };
+    })
     .sort((a, b) => b.score - a.score);
 }
 

@@ -8,9 +8,13 @@ import {
   copyText,
   countAdds,
   filterEntries,
+  formatAge,
+  formatScore,
   normalizeFolder,
   rank,
   score,
+  strength,
+  textOpacity,
 } from "../demo.js";
 
 // Expected values come from link_sense/scorer.py: round(visits * exp(-0.1 * days), 3).
@@ -126,4 +130,57 @@ test("demo.js never builds markup from strings", () => {
   for (const banned of ["innerHTML", "outerHTML", "insertAdjacentHTML", "document.write", "eval("]) {
     assert.equal(src.includes(banned), false, `demo.js must not contain ${banned}`);
   }
+});
+
+test("strength maps scores to 0..1 on a log scale, clamped", () => {
+  assert.equal(strength(0), 0);
+  assert.equal(strength(120), 1);
+  assert.equal(strength(1_000_000), 1);
+  assert.equal(strength(-5), 0);
+  const samples = [0, 0.1, 1, 10, 50, 120].map(strength);
+  for (let i = 1; i < samples.length; i += 1) assert.ok(samples[i] > samples[i - 1], `strength must increase at index ${i}`);
+});
+
+test("textOpacity stays between 0.7 and 1 so faded text remains readable", () => {
+  assert.equal(textOpacity(0), 0.7);
+  assert.equal(textOpacity(1), 1);
+  assert.ok(Math.abs(textOpacity(0.5) - 0.85) < 1e-9);
+  assert.equal(textOpacity(-3), 0.7);
+  assert.equal(textOpacity(9), 1);
+});
+
+test("formatAge shows whole days plainly and fractions to one decimal", () => {
+  assert.equal(formatAge(0.1), "0.1d");
+  assert.equal(formatAge(1), "1d");
+  assert.equal(formatAge(45), "45d");
+  assert.equal(formatAge(0.1 + 3), "3.1d");
+  assert.equal(formatAge(12.0000000001), "12d");
+});
+
+test("formatScore keeps two decimals for small scores and one for large", () => {
+  assert.equal(formatScore(118.806), "118.8");
+  assert.equal(formatScore(10), "10.0");
+  assert.equal(formatScore(5.915), "5.92");
+  assert.equal(formatScore(0.0061), "0.01");
+  assert.equal(formatScore(0), "0.00");
+});
+
+test("rank with extraDays ages every entry equally: scores shrink, order and inputs stay put", () => {
+  const input = [
+    { title: "a", url: "https://a.example/", visits: 100, days: 0 },
+    { title: "b", url: "https://b.example/", visits: 50, days: 5 },
+  ];
+  const aged = rank(input, 10);
+  assert.deepEqual(aged.map((e) => e.title), ["a", "b"]);
+  assert.equal(aged[0].days, 10);
+  assert.equal(aged[0].score, score(100, 10));
+  assert.equal(aged[1].days, 15);
+  assert.equal(input[0].days, 0, "input is not mutated");
+  assert.deepEqual(rank(input), rank(input, 0));
+});
+
+test("skipping ahead never reorders the sample list", () => {
+  const order = (n) => rank(SAMPLE, n).map((e) => e.url);
+  assert.deepEqual(order(30), order(0));
+  assert.deepEqual(order(60), order(0));
 });
